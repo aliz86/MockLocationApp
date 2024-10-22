@@ -51,7 +51,9 @@ class MockLocService : Service() {
             return START_NOT_STICKY
         }
         //startLocationMocking()
-        return START_STICKY
+        //NOT_STICKY ecause it is supposed to execute in foreground and when it is dead and then it is started again, crash happens saying we don't have permission for it:
+        //java.lang.RuntimeException: Unable to start service com.dataliz.gpsmock.MockLocService@65a4bd4 with null: android.app.ForegroundServiceStartNotAllowedException: Service.startForeground() not allowed due to mAllowStartForeground false: service com.dataliz.gpsmock/.MockLocService
+        return START_NOT_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? {
