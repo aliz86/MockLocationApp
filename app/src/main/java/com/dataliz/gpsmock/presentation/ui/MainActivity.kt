@@ -1,13 +1,10 @@
-package com.dataliz.gpsmock
+package com.dataliz.gpsmock.presentation.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.PackageManager
-import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -16,7 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -30,15 +26,12 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -50,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -59,16 +51,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.dataliz.gpsmock.ui.theme.GPSMockTheme
-import com.google.android.gms.maps.model.CameraPosition
+import com.dataliz.gpsmock.utils.TAG
+import com.dataliz.gpsmock.presentation.viewmodels.MapViewModel
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.flow.StateFlow
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.model.LatLng
 
 class MainActivity : ComponentActivity() {
 
@@ -99,7 +89,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter", "MissingPermission",
     "UnusedMaterial3ScaffoldPaddingParameter"

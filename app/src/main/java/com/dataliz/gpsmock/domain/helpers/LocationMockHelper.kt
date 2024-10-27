@@ -1,4 +1,4 @@
-package com.dataliz.gpsmock
+package com.dataliz.gpsmock.domain.helpers
 
 import android.location.Location
 import android.location.LocationManager
@@ -8,7 +8,7 @@ import android.os.SystemClock
 import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 
-class LocationMockHandler {
+class LocationMockHelper {
     fun startLocationMocking(locationManager: LocationManager, targetLocation: LatLng) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {

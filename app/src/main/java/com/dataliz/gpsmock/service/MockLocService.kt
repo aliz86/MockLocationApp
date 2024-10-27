@@ -1,4 +1,4 @@
-package com.dataliz.gpsmock
+package com.dataliz.gpsmock.service
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -13,6 +13,10 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.dataliz.gpsmock.domain.helpers.LocationMockHelper
+import com.dataliz.gpsmock.utils.STOP_SERVICE
+import com.dataliz.gpsmock.utils.TAG
+import com.dataliz.gpsmock.presentation.ui.MainActivity
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.*
 
@@ -22,15 +26,15 @@ class MockLocService : Service() {
     private val notificationId = 1234
     private val channelId = "my_foreground_service_channel"
     private lateinit var notification : Notification
-    private val locationMockHandler by lazy {
-        LocationMockHandler()
+    private val locationMockHelper by lazy {
+        LocationMockHelper()
     }
 
     private val stopServiceIntent by lazy {
         PendingIntent.getService(
             this,
             0,
-            Intent(this, MockLocService::class.java).setAction("STOP_SERVICE"),
+            Intent(this, MockLocService::class.java).setAction(STOP_SERVICE),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
@@ -46,7 +50,7 @@ class MockLocService : Service() {
         startForeground(notificationId, notification)
 
         Log.d(TAG, "onStartCommand, startId = $startId")
-        if (intent?.action == "STOP_SERVICE") {
+        if (intent?.action == STOP_SERVICE) {
             stopSelf() // Stop the service
             return START_NOT_STICKY
         }
@@ -56,7 +60,7 @@ class MockLocService : Service() {
         return START_NOT_STICKY
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
+    override fun onBind(intent: Intent?): IBinder {
         Log.d(TAG,"onBind")
         return LocalBinder()
     }
@@ -70,14 +74,14 @@ class MockLocService : Service() {
     fun startLocationMocking(locationManager: LocationManager, targetLocation: LatLng){
         serviceScope.launch {
             while (isActive) {
-                locationMockHandler.startLocationMocking(locationManager, targetLocation)
+                locationMockHelper.startLocationMocking(locationManager, targetLocation)
                 delay(300)
             }
         }
     }
 
     fun stopLocationMocking(locationManager: LocationManager) {
-        locationMockHandler.stopLocationMocking(locationManager)
+        locationMockHelper.stopLocationMocking(locationManager)
     }
 
     // Create and show the notification for the foreground service

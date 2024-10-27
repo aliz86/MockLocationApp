@@ -1,4 +1,4 @@
-package com.dataliz.gpsmock
+package com.dataliz.gpsmock.presentation.viewmodels
 
 import android.app.Application
 import android.content.ComponentName
@@ -10,6 +10,9 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import com.dataliz.gpsmock.utils.AppInfo
+import com.dataliz.gpsmock.utils.TAG
+import com.dataliz.gpsmock.service.MockLocService
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,13 +37,11 @@ class MapViewModel(private val application: Application) : AndroidViewModel(appl
     private lateinit var targetLocation: LatLng
 
     // Define the connection to the service
-    private val connection = object : ServiceConnection {
+    private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as MockLocService.LocalBinder
             mockLocService = binder.service
             isServiceBound = true
-
-            Log.d(TAG, "mockLocService == null? ${mockLocService == null}")
             mockLocService?.startLocationMocking(locationManager, targetLocation)
         }
 
@@ -67,16 +68,17 @@ class MapViewModel(private val application: Application) : AndroidViewModel(appl
         } else {
             application.applicationContext.startService(serviceIntent)
         }
-        application.applicationContext.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
+        application.applicationContext.bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
     fun stopLocationMocking(locationManager: LocationManager){
+        application.applicationContext.unbindService(serviceConnection)
         mockLocService?.stopLocationMocking(locationManager)
     }
 
     override fun onCleared() {
         super.onCleared()
         mockLocService = null
-        application.applicationContext.unbindService(connection)
+        application.applicationContext.unbindService(serviceConnection)
     }
 }
