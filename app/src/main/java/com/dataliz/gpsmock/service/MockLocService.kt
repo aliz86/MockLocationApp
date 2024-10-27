@@ -27,7 +27,7 @@ class MockLocService : Service() {
     private val channelId = "my_foreground_service_channel"
     private lateinit var notification : Notification
     private val locationMockHelper by lazy {
-        LocationMockHelper()
+        LocationMockHelper(applicationContext)
     }
 
     private val stopServiceIntent by lazy {
