@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">GPS Mock</string>
+    <string name="enable_mock_locations">"Enable Mock Locations"</string>
+    <string name="to_use_this_feature_developer">"To use this feature, you need to enable mock locations in Developer options."</string>
+    <string name="open_settings">"Open Settings"</string>
+    <string name="cancel">"Cancel"</string>
+    <string name="check_permissions_again">"Check permissions again!\nerror: "</string>
 </resources>

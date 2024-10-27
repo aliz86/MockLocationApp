@@ -90,7 +90,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "MissingPermission",
+@SuppressLint(
+    "UnusedMaterialScaffoldPaddingParameter", "MissingPermission",
     "UnusedMaterial3ScaffoldPaddingParameter"
 )
 @Composable
@@ -123,55 +124,54 @@ fun MapScreen(
 
     Scaffold(
         //topBar = { TopAppBar(title = { Text("Google Map") }) },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        if (isLocationMockingStarted) {
-                            Log.d(TAG, "here1")
-                            // Stop location mocking
-                            viewModel.stopLocationMocking(locationManager)
-                            isLocationMockingStarted = false
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    if (isLocationMockingStarted) {
+                        Log.d(TAG, "here1")
+                        // Stop location mocking
+                        viewModel.stopLocationMocking(locationManager)
+                        isLocationMockingStarted = false
+                    } else {
+                        if (hasMockLocationPermission) {
+                            Log.d(TAG, "here2")
+                            // Permission already granted, start mocking
+                            viewModel.startLocationMockingRepeatedly(
+                                locationManager,
+                                cameraPositionState.position.target
+                            )
+                            isLocationMockingStarted = true
                         } else {
-                            if (hasMockLocationPermission){
-                                Log.d(TAG, "here2")
-                                // Permission already granted, start mocking
-                                viewModel.startLocationMockingRepeatedly(
-                                    locationManager,
-                                    cameraPositionState.position.target
+                            Log.d(TAG, "asking for permissions")
+                            // Request ACCESS_MOCK_LOCATION permission
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                launcher.launch(
+                                    arrayOf(
+                                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                        android.Manifest.permission.POST_NOTIFICATIONS,
+                                        //android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                                        //android.Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                                        //android.Manifest.permission.ACCESS_MOCK_LOCATION // Add this line
+                                    )
                                 )
-                                isLocationMockingStarted = true
                             } else {
-                                Log.d(TAG, "here3")
-                                // Request ACCESS_MOCK_LOCATION permission
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                    launcher.launch(
-                                        arrayOf(
-                                            android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                            android.Manifest.permission.POST_NOTIFICATIONS,
-                                            //android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                                            //android.Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                                            //android.Manifest.permission.ACCESS_MOCK_LOCATION // Add this line
-                                        )
+                                Log.d(TAG, "here4")
+                                launcher.launch(
+                                    arrayOf(
+                                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                        android.Manifest.permission.POST_NOTIFICATIONS,
+                                        //android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                                        //android.Manifest.permission.ACCESS_MOCK_LOCATION // Add this line
                                     )
-                                } else {
-
-                                    Log.d(TAG, "here4")
-                                    launcher.launch(
-                                        arrayOf(
-                                            android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                            android.Manifest.permission.POST_NOTIFICATIONS,
-                                            //android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                                            //android.Manifest.permission.ACCESS_MOCK_LOCATION // Add this line
-                                        )
-                                    )
-                                }
+                                )
                             }
                         }
-                    }, content = {
-
                     }
-                )
-            }
+                }, content = {
+
+                }
+            )
+        }
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             GoogleMap(
@@ -215,7 +215,6 @@ fun MapScreen(
     }
 
 
-
 }
 
 @Composable
@@ -256,7 +255,10 @@ fun CustomDialogUI(viewModel: MapViewModel) {
             )
 
             // Icon + Text Rows
-            DialogRow(icon = Icons.Default.AccountCircle, text = "Developer: ${appInfo.developerName}")
+            DialogRow(
+                icon = Icons.Default.AccountCircle,
+                text = "Developer: ${appInfo.developerName}"
+            )
             DialogRow(icon = Icons.Default.Email, text = "Email: ${appInfo.email}")
             DialogRow(icon = Icons.Default.Phone, text = "Version: ${appInfo.version}")
             DialogRow(icon = Icons.Default.Info, text = "This is a sample dialog")
