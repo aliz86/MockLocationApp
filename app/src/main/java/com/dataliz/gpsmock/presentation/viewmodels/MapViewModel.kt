@@ -17,6 +17,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.lang.ref.WeakReference
 
 class MapViewModel(private val application: Application) : AndroidViewModel(application) {
 
@@ -29,7 +30,8 @@ class MapViewModel(private val application: Application) : AndroidViewModel(appl
     private val _userLocation = MutableStateFlow<LatLng?>(null)
     val userLocation = _userLocation.asStateFlow()
 
-    private var mockLocService : MockLocService? = null
+    //when the service stops, the mockLocationService object should be garbege colllected , too. but withput this WeakReference line, westilll will have a reference to that service object
+    private var mockLocService : WeakReference<MockLocService?> = WeakReference(null)
 
     private var isServiceBound = false
 
@@ -40,9 +42,9 @@ class MapViewModel(private val application: Application) : AndroidViewModel(appl
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as MockLocService.LocalBinder
-            mockLocService = binder.service
+            mockLocService = WeakReference(binder.service)
             isServiceBound = true
-            mockLocService?.startLocationMocking(locationManager, targetLocation)
+            mockLocService.get()?.startLocationMocking(locationManager, targetLocation)
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -73,12 +75,12 @@ class MapViewModel(private val application: Application) : AndroidViewModel(appl
 
     fun stopLocationMocking(locationManager: LocationManager){
         application.applicationContext.unbindService(serviceConnection)
-        mockLocService?.stopLocationMocking(locationManager)
+        mockLocService.get()?.stopLocationMocking(locationManager)
     }
 
     override fun onCleared() {
         super.onCleared()
-        mockLocService = null
+        mockLocService.clear()
         application.applicationContext.unbindService(serviceConnection)
     }
 }
