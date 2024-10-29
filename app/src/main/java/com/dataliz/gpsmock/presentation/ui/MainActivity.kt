@@ -6,6 +6,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -51,8 +52,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.dataliz.gpsmock.R
 import com.dataliz.gpsmock.utils.TAG
 import com.dataliz.gpsmock.presentation.viewmodels.MapViewModel
+import com.dataliz.gpsmock.utils.hasAllMockLocationPermissions
+import com.dataliz.gpsmock.utils.hasMockLocationPermission
+import com.dataliz.gpsmock.utils.openDeveloperOptions
+import com.dataliz.gpsmock.utils.showDialogForEnablingMockLocations
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -101,23 +107,28 @@ fun MapScreen(
     fusedLocationClient: FusedLocationProviderClient,
     activity: ComponentActivity
 ) {
+    val context = LocalContext.current
     val cameraPositionState = rememberCameraPositionState {
         position = viewModel.cameraPosition.value
     }
     var isLocationMockingStarted by remember { mutableStateOf(false) }
     val locationManager = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    // Check for ACCESS_MOCK_LOCATION permission
-    val hasMockLocationPermission = true
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
             if (permissions.all { it.value }) {
-                // All permissions granted, proceed with getting location
-                // ... (get location logic)
+                if (!hasMockLocationPermission(context)) {
+                    showDialogForEnablingMockLocations(context)
+                    // Option 2: Open developer options directly
+                    openDeveloperOptions(context)
+                }
             } else {
-                // Not all permissions granted, show the dialog
-                //navController.navigate("dialog")
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.check_permissions_again),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     )
@@ -133,8 +144,7 @@ fun MapScreen(
                         viewModel.stopLocationMocking(locationManager)
                         isLocationMockingStarted = false
                     } else {
-                        if (hasMockLocationPermission) {
-                            Log.d(TAG, "here2")
+                        if (hasAllMockLocationPermissions(context)) {
                             // Permission already granted, start mocking
                             viewModel.startLocationMockingRepeatedly(
                                 locationManager,
@@ -144,14 +154,11 @@ fun MapScreen(
                         } else {
                             Log.d(TAG, "asking for permissions")
                             // Request ACCESS_MOCK_LOCATION permission
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                 launcher.launch(
                                     arrayOf(
                                         android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                        android.Manifest.permission.POST_NOTIFICATIONS,
-                                        //android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                                        //android.Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                                        //android.Manifest.permission.ACCESS_MOCK_LOCATION // Add this line
+                                        android.Manifest.permission.POST_NOTIFICATIONS
                                     )
                                 )
                             } else {
@@ -159,9 +166,7 @@ fun MapScreen(
                                 launcher.launch(
                                     arrayOf(
                                         android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                        android.Manifest.permission.POST_NOTIFICATIONS,
-                                        //android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                                        //android.Manifest.permission.ACCESS_MOCK_LOCATION // Add this line
+                                        android.Manifest.permission.POST_NOTIFICATIONS
                                     )
                                 )
                             }
