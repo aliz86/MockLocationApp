@@ -70,6 +70,7 @@ class MockLocService : Service() {
         Log.d(TAG, "onStartCommand, startId = $startId")
         if (intent?.action == STOP_SERVICE) {
             stopSelf() // Stop the service
+            serviceScope.cancel()
             return START_NOT_STICKY
         } else if(intent?.action == STOP_MOCKING){
             stopLocationMocking(getSystemService(Context.LOCATION_SERVICE) as LocationManager)
