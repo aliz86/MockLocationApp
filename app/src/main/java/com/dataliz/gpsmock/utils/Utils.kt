@@ -44,7 +44,6 @@ fun hasAllMockLocationPermissions(context: Context): Boolean {
                         hasMockLocationPermission(context)
             }
             )
-
 }
 
 fun hasLocationPermission(context: Context): Boolean {

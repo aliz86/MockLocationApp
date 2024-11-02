@@ -14,9 +14,10 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.dataliz.gpsmock.domain.helpers.LocationMockHelper
+import com.dataliz.gpsmock.presentation.ui.MainActivity
+import com.dataliz.gpsmock.utils.STOP_MOCKING
 import com.dataliz.gpsmock.utils.STOP_SERVICE
 import com.dataliz.gpsmock.utils.TAG
-import com.dataliz.gpsmock.presentation.ui.MainActivity
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.*
 
@@ -39,6 +40,15 @@ class MockLocService : Service() {
         )
     }
 
+    private val stopMockingIntent by lazy {
+        PendingIntent.getService(
+            this,
+            0,
+            Intent(this, MockLocService::class.java).setAction(STOP_MOCKING),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+    }
+
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "onCreate")
@@ -53,11 +63,16 @@ class MockLocService : Service() {
         if (intent?.action == STOP_SERVICE) {
             stopSelf() // Stop the service
             return START_NOT_STICKY
+        } else if(intent?.action == STOP_MOCKING){
+            stopLocationMocking(getSystemService(Context.LOCATION_SERVICE) as LocationManager)
+            clearNotification()
+            stopSelf() // Stop the service
+            return START_NOT_STICKY
         }
         //startLocationMocking()
         //NOT_STICKY ecause it is supposed to execute in foreground and when it is dead and then it is started again, crash happens saying we don't have permission for it:
         //java.lang.RuntimeException: Unable to start service com.dataliz.gpsmock.MockLocService@65a4bd4 with null: android.app.ForegroundServiceStartNotAllowedException: Service.startForeground() not allowed due to mAllowStartForeground false: service com.dataliz.gpsmock/.MockLocService
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder {
@@ -73,9 +88,11 @@ class MockLocService : Service() {
 
     fun startLocationMocking(locationManager: LocationManager, targetLocation: LatLng){
         serviceScope.launch {
+            //loop
             while (isActive) {
                 locationMockHelper.startLocationMocking(locationManager, targetLocation)
-                delay(300)
+                stopLocationMocking(locationManager)
+                delay(600)
             }
         }
     }
@@ -101,7 +118,7 @@ class MockLocService : Service() {
             .addAction(
                 androidx.core.R.drawable.notification_tile_bg, // Replace with your stop icon drawable
                 "Stop",
-                stopServiceIntent
+                stopMockingIntent
             )
             .build()
     }
@@ -117,9 +134,12 @@ class MockLocService : Service() {
         }
     }
 
+    private fun clearNotification(){
+        (getSystemService(NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(notificationId)
+    }
+
     inner class LocalBinder : Binder() {
         val service: MockLocService
             get() = this@MockLocService
     }
-
 }
