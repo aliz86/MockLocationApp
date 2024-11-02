@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -111,7 +112,7 @@ fun MapScreen(
     val cameraPositionState = rememberCameraPositionState {
         position = viewModel.cameraPosition.value
     }
-    var isLocationMockingStarted by remember { mutableStateOf(false) }
+    var isLocationMockingStarted = viewModel.isLocationMockingStarted.collectAsStateWithLifecycle()
     val locationManager = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
     val launcher = rememberLauncherForActivityResult(
@@ -138,11 +139,11 @@ fun MapScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    if (isLocationMockingStarted) {
+                    if (isLocationMockingStarted.value) {
                         Log.d(TAG, "here1")
                         // Stop location mocking
                         viewModel.stopLocationMocking(locationManager)
-                        isLocationMockingStarted = false
+                        viewModel.setLocationMocking(false)
                     } else {
                         if (hasAllMockLocationPermissions(context)) {
                             // Permission already granted, start mocking
@@ -150,7 +151,7 @@ fun MapScreen(
                                 locationManager,
                                 cameraPositionState.position.target
                             )
-                            isLocationMockingStarted = true
+                            viewModel.setLocationMocking(true)
                         } else {
                             Log.d(TAG, "asking for permissions")
                             // Request ACCESS_MOCK_LOCATION permission

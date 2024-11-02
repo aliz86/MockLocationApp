@@ -8,23 +8,28 @@ import android.content.ServiceConnection
 import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import com.dataliz.gpsmock.utils.AppInfo
-import com.dataliz.gpsmock.utils.TAG
 import com.dataliz.gpsmock.service.MockLocService
+import com.dataliz.gpsmock.service.OnMockModeChanged
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.lang.ref.WeakReference
 
 class MapViewModel(private val application: Application) : AndroidViewModel(application) {
 
     val appInfo = AppInfo()
+    private var _isLocationMockingStarted : MutableStateFlow<Boolean> = MutableStateFlow(false)
+    var isLocationMockingStarted : StateFlow<Boolean> = _isLocationMockingStarted.asStateFlow()
+
     private val _cameraPosition = MutableStateFlow(
         CameraPosition.fromLatLngZoom(LatLng(37.7749, -122.4194), 12f)
     )
+
     var cameraPosition = _cameraPosition.asStateFlow()
 
     private val _userLocation = MutableStateFlow<LatLng?>(null)
@@ -40,11 +45,16 @@ class MapViewModel(private val application: Application) : AndroidViewModel(appl
 
     // Define the connection to the service
     private val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            val binder = service as MockLocService.LocalBinder
+        override fun onServiceConnected(name: ComponentName?, iBinder: IBinder?) {
+            val binder = iBinder as MockLocService.LocalBinder
             mockLocService = WeakReference(binder.service)
             isServiceBound = true
             mockLocService.get()?.startLocationMocking(locationManager, targetLocation)
+            mockLocService.get()?.onMockModeChanged = object : OnMockModeChanged{
+                override fun modeChanged(mode: Boolean) {
+                    _isLocationMockingStarted.value = mode
+                }
+            }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -76,6 +86,10 @@ class MapViewModel(private val application: Application) : AndroidViewModel(appl
     fun stopLocationMocking(locationManager: LocationManager){
         application.applicationContext.unbindService(serviceConnection)
         mockLocService.get()?.stopLocationMocking(locationManager)
+    }
+
+    fun setLocationMocking(mode : Boolean){
+        _isLocationMockingStarted.value = mode
     }
 
     override fun onCleared() {

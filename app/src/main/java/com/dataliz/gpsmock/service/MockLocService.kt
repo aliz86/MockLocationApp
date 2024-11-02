@@ -19,11 +19,17 @@ import com.dataliz.gpsmock.utils.STOP_MOCKING
 import com.dataliz.gpsmock.utils.STOP_SERVICE
 import com.dataliz.gpsmock.utils.TAG
 import com.google.android.gms.maps.model.LatLng
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 class MockLocService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.Default)
+    private var binder : LocalBinder? = null
     private val notificationId = 1234
     private val channelId = "my_foreground_service_channel"
     private lateinit var notification : Notification
@@ -49,6 +55,8 @@ class MockLocService : Service() {
         )
     }
 
+    var onMockModeChanged : OnMockModeChanged? = null
+
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "onCreate")
@@ -65,7 +73,8 @@ class MockLocService : Service() {
             return START_NOT_STICKY
         } else if(intent?.action == STOP_MOCKING){
             stopLocationMocking(getSystemService(Context.LOCATION_SERVICE) as LocationManager)
-            clearNotification()
+            onMockModeChanged?.modeChanged(false)
+            stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf() // Stop the service
             return START_NOT_STICKY
         }
@@ -77,7 +86,8 @@ class MockLocService : Service() {
 
     override fun onBind(intent: Intent?): IBinder {
         Log.d(TAG,"onBind")
-        return LocalBinder()
+        binder = LocalBinder()
+        return binder as LocalBinder
     }
 
     override fun onDestroy() {
@@ -98,6 +108,7 @@ class MockLocService : Service() {
     }
 
     fun stopLocationMocking(locationManager: LocationManager) {
+        serviceScope.cancel()
         locationMockHelper.stopLocationMocking(locationManager)
     }
 
