@@ -12,6 +12,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,7 +43,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -187,7 +190,7 @@ fun MapScreen(
                 cameraPositionState = cameraPositionState
             ) {
                 // Fixed Marker at the center of the screen
-                Marker(
+                /*Marker(
                     state = MarkerState(position = cameraPositionState.position.target),
                     title = "Fixed Marker",
                     snippet = "This marker stays at the center"
@@ -201,7 +204,7 @@ fun MapScreen(
                         title = "Your Location",
                         snippet = "Lat: ${latLng.latitude}, Lng: ${latLng.longitude}"
                     )
-                }
+                }*/
 
             }
             Row(
@@ -218,6 +221,15 @@ fun MapScreen(
                 }
             }
         }
+        Box (modifier = Modifier.fillMaxSize()) {
+            Icon(
+                painter = painterResource(id = R.drawable.baseline_location_on_24),
+                modifier = Modifier.align(Alignment.Center),
+                contentDescription = "Map Marker",
+                tint = Color.Unspecified // Or apply a tint if you want a different color
+            )
+        }
+
     }
 
 
