@@ -127,7 +127,7 @@ fun MapScreen(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
             if (permissions.all { it.value }) {
-                viewModel.isLocationPermissionGranted (true)
+                viewModel.isLocationPermissionGranted(true)
                 viewModel.fetchUserLocation()
                 if (!hasMockLocationPermission(context)) {
                     showDialogForEnablingMockLocations(context)
@@ -188,9 +188,11 @@ fun MapScreen(
         }
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Box (modifier = Modifier
-                .fillMaxSize()
-                .weight(1f)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+            ) {
                 MapComposable(viewModel, cameraPositionState)
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_location_on_24),
@@ -291,7 +293,7 @@ fun DialogRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: Strin
 }
 
 @Composable
-fun MapComposable(viewModel: MapViewModel, cameraPositionState: CameraPositionState){
+fun MapComposable(viewModel: MapViewModel, cameraPositionState: CameraPositionState) {
     val userLocation = viewModel.userLocation
     val hasLocationPermission = viewModel.hasLocationPermission.collectAsStateWithLifecycle()
     GoogleMap(
@@ -299,11 +301,13 @@ fun MapComposable(viewModel: MapViewModel, cameraPositionState: CameraPositionSt
             .fillMaxSize(),
         cameraPositionState = cameraPositionState,
         properties = MapProperties(isMyLocationEnabled = hasLocationPermission.value), // Enable user location
-        uiSettings = MapUiSettings(myLocationButtonEnabled = true, zoomControlsEnabled = true) // Enable the default button
+        uiSettings = MapUiSettings(
+            myLocationButtonEnabled = true,
+            zoomControlsEnabled = true
+        ) // Enable the default button
     ) {
-
         LaunchedEffect(key1 = userLocation.value) {
-            if(!viewModel.isLocationMockingStarted.value){
+            if (!viewModel.isLocationMockingStarted.value) {
                 userLocation.value?.let { location ->
                     cameraPositionState.animate(
                         CameraUpdateFactory.newCameraPosition(

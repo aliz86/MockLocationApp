@@ -29,10 +29,10 @@ import kotlinx.coroutines.launch
 class MockLocService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.Default)
-    private var binder : LocalBinder? = null
+    private var binder: LocalBinder? = null
     private val notificationId = 1234
     private val channelId = "my_foreground_service_channel"
-    private lateinit var notification : Notification
+    private lateinit var notification: Notification
     private val locationMockHelper by lazy {
         LocationMockHelper(applicationContext)
     }
@@ -55,7 +55,7 @@ class MockLocService : Service() {
         )
     }
 
-    var onMockModeChanged : OnMockModeChanged? = null
+    var onMockModeChanged: OnMockModeChanged? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -72,7 +72,7 @@ class MockLocService : Service() {
             stopSelf() // Stop the service
             serviceScope.cancel()
             return START_NOT_STICKY
-        } else if(intent?.action == STOP_MOCKING){
+        } else if (intent?.action == STOP_MOCKING) {
             stopLocationMocking(getSystemService(Context.LOCATION_SERVICE) as LocationManager)
             onMockModeChanged?.modeChanged(false)
             stopForeground(STOP_FOREGROUND_REMOVE)
@@ -86,7 +86,7 @@ class MockLocService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder {
-        Log.d(TAG,"onBind")
+        Log.d(TAG, "onBind")
         binder = LocalBinder()
         return binder as LocalBinder
     }
@@ -97,7 +97,7 @@ class MockLocService : Service() {
         serviceScope.cancel()
     }
 
-    fun startLocationMocking(locationManager: LocationManager, targetLocation: LatLng){
+    fun startLocationMocking(locationManager: LocationManager, targetLocation: LatLng) {
         serviceScope.launch {
             //loop
             while (isActive) {
@@ -116,8 +116,10 @@ class MockLocService : Service() {
     // Create and show the notification for the foreground service
     private fun createNotification(): Notification {
         // Intent to open your app when the notification is tapped
-        val notificationIntent = Intent(this, MainActivity::class.java) // Replace with your activity
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
+        val notificationIntent =
+            Intent(this, MainActivity::class.java) // Replace with your activity
+        val pendingIntent =
+            PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 
         return NotificationCompat.Builder(this, channelId)
             .setContentTitle("Foreground Service")
@@ -141,12 +143,13 @@ class MockLocService : Service() {
             val channelName = "Foreground Service Channel"
             val importance = NotificationManager.IMPORTANCE_DEFAULT
             val channel = NotificationChannel(channelId, channelName, importance)
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
     }
 
-    private fun clearNotification(){
+    private fun clearNotification() {
         (getSystemService(NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(notificationId)
     }
 
