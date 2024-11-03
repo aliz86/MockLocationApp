@@ -17,8 +17,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -35,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,6 +63,7 @@ import com.dataliz.gpsmock.R
 import com.dataliz.gpsmock.utils.TAG
 import com.dataliz.gpsmock.presentation.viewmodels.MapViewModel
 import com.dataliz.gpsmock.utils.hasAllMockLocationPermissions
+import com.dataliz.gpsmock.utils.hasLocationPermission
 import com.dataliz.gpsmock.utils.hasMockLocationPermission
 import com.dataliz.gpsmock.utils.openDeveloperOptions
 import com.dataliz.gpsmock.utils.showDialogForEnablingMockLocations
@@ -69,15 +73,18 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.CameraPositionState
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
         setContent {
             Surface(color = MaterialTheme.colorScheme.background) {
                 val navController = rememberNavController()
@@ -88,7 +95,6 @@ class MainActivity : ComponentActivity() {
                         MapScreen(
                             viewModel,
                             navController,
-                            fusedLocationClient,
                             this@MainActivity
                         )
                     }
@@ -108,7 +114,6 @@ class MainActivity : ComponentActivity() {
 fun MapScreen(
     viewModel: MapViewModel,
     navController: NavHostController,
-    fusedLocationClient: FusedLocationProviderClient,
     activity: ComponentActivity
 ) {
     val context = LocalContext.current
@@ -122,6 +127,8 @@ fun MapScreen(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
             if (permissions.all { it.value }) {
+                viewModel.isLocationPermissionGranted (true)
+                viewModel.fetchUserLocation()
                 if (!hasMockLocationPermission(context)) {
                     showDialogForEnablingMockLocations(context)
                     // Option 2: Open developer options directly
@@ -146,7 +153,6 @@ fun MapScreen(
                         Log.d(TAG, "here1")
                         // Stop location mocking
                         viewModel.stopLocationMocking(locationManager)
-                        viewModel.setLocationMocking(false)
                     } else {
                         if (hasAllMockLocationPermissions(context)) {
                             // Permission already granted, start mocking
@@ -154,7 +160,6 @@ fun MapScreen(
                                 locationManager,
                                 cameraPositionState.position.target
                             )
-                            viewModel.setLocationMocking(true)
                         } else {
                             Log.d(TAG, "asking for permissions")
                             // Request ACCESS_MOCK_LOCATION permission
@@ -183,29 +188,19 @@ fun MapScreen(
         }
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            GoogleMap(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                cameraPositionState = cameraPositionState
-            ) {
-                // Fixed Marker at the center of the screen
-                /*Marker(
-                    state = MarkerState(position = cameraPositionState.position.target),
-                    title = "Fixed Marker",
-                    snippet = "This marker stays at the center"
+            Box (modifier = Modifier
+                .fillMaxSize()
+                .weight(1f)) {
+                MapComposable(viewModel, cameraPositionState)
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_location_on_24),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .width(50.dp)
+                        .height(50.dp),
+                    contentDescription = "Map Marker",
+                    tint = Color.Unspecified // Or apply a tint if you want a different color
                 )
-
-                // Marker for user's location (if available)
-                val userLocation = viewModel.userLocation.collectAsState()
-                userLocation.value?.let { latLng ->
-                    Marker(
-                        state = MarkerState(position = latLng),
-                        title = "Your Location",
-                        snippet = "Lat: ${latLng.latitude}, Lng: ${latLng.longitude}"
-                    )
-                }*/
-
             }
             Row(
                 modifier = Modifier
@@ -221,17 +216,8 @@ fun MapScreen(
                 }
             }
         }
-        Box (modifier = Modifier.fillMaxSize()) {
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_location_on_24),
-                modifier = Modifier.align(Alignment.Center),
-                contentDescription = "Map Marker",
-                tint = Color.Unspecified // Or apply a tint if you want a different color
-            )
-        }
 
     }
-
 
 }
 
@@ -301,5 +287,51 @@ fun DialogRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: Strin
             tint = Color.Gray // Change the icon color as needed
         )
         Text(text = text)
+    }
+}
+
+@Composable
+fun MapComposable(viewModel: MapViewModel, cameraPositionState: CameraPositionState){
+    val userLocation = viewModel.userLocation
+    val hasLocationPermission = viewModel.hasLocationPermission.collectAsStateWithLifecycle()
+    GoogleMap(
+        modifier = Modifier
+            .fillMaxSize(),
+        cameraPositionState = cameraPositionState,
+        properties = MapProperties(isMyLocationEnabled = hasLocationPermission.value), // Enable user location
+        uiSettings = MapUiSettings(myLocationButtonEnabled = true, zoomControlsEnabled = true) // Enable the default button
+    ) {
+
+        LaunchedEffect(key1 = userLocation.value) {
+            if(!viewModel.isLocationMockingStarted.value){
+                userLocation.value?.let { location ->
+                    cameraPositionState.animate(
+                        CameraUpdateFactory.newCameraPosition(
+                            CameraPosition.Builder()
+                                .target(LatLng(location.latitude, location.longitude))
+                                .zoom(15f) // Set your desired zoom level
+                                .build()
+                        )
+                    )
+                }
+            }
+        }
+        // Fixed Marker at the center of the screen
+        /*Marker(
+            state = MarkerState(position = cameraPositionState.position.target),
+            title = "Fixed Marker",
+            snippet = "This marker stays at the center"
+        )
+
+        // Marker for user's location (if available)
+        val userLocation = viewModel.userLocation.collectAsState()
+        userLocation.value?.let { latLng ->
+            Marker(
+                state = MarkerState(position = latLng),
+                title = "Your Location",
+                snippet = "Lat: ${latLng.latitude}, Lng: ${latLng.longitude}"
+            )
+        }*/
+
     }
 }
