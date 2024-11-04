@@ -38,15 +38,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,16 +57,12 @@ import com.dataliz.gpsmock.R
 import com.dataliz.gpsmock.utils.TAG
 import com.dataliz.gpsmock.presentation.viewmodels.MapViewModel
 import com.dataliz.gpsmock.utils.hasAllMockLocationPermissions
-import com.dataliz.gpsmock.utils.hasLocationPermission
 import com.dataliz.gpsmock.utils.hasMockLocationPermission
-import com.dataliz.gpsmock.utils.openDeveloperOptions
-import com.dataliz.gpsmock.utils.showDialogForEnablingMockLocations
+import com.dataliz.gpsmock.utils.isDeveloperOptionsEnabled
+import com.dataliz.gpsmock.utils.showDialogForEnablingDeveloperOptions
+import com.dataliz.gpsmock.utils.showDialogForSettingAppAsMockLocations
 import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -129,10 +119,11 @@ fun MapScreen(
             if (permissions.all { it.value }) {
                 viewModel.isLocationPermissionGranted(true)
                 viewModel.fetchUserLocation()
-                if (!hasMockLocationPermission(context)) {
-                    showDialogForEnablingMockLocations(context)
-                    // Option 2: Open developer options directly
-                    openDeveloperOptions(context)
+                if(!isDeveloperOptionsEnabled(context)){
+                    showDialogForEnablingDeveloperOptions(context)
+                }
+                else if (!hasMockLocationPermission(context)) {
+                    showDialogForSettingAppAsMockLocations(context)
                 }
             } else {
                 Toast.makeText(
@@ -294,7 +285,7 @@ fun DialogRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: Strin
 
 @Composable
 fun MapComposable(viewModel: MapViewModel, cameraPositionState: CameraPositionState) {
-    val userLocation = viewModel.userLocation
+    val userLocation = viewModel.userLocation.collectAsStateWithLifecycle()
     val hasLocationPermission = viewModel.hasLocationPermission.collectAsStateWithLifecycle()
     GoogleMap(
         modifier = Modifier

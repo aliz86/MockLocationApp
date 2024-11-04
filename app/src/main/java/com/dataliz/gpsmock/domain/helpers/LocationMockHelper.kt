@@ -1,24 +1,15 @@
 package com.dataliz.gpsmock.domain.helpers
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.Context
-import android.content.Intent
-import android.location.Criteria
 import android.location.Location
 import android.location.LocationManager
 import android.location.provider.ProviderProperties
 import android.os.Build
-import android.os.PowerManager
 import android.os.SystemClock
-import android.provider.Settings
 import android.util.Log
-import android.widget.Toast
-import androidx.core.content.ContextCompat
-import com.dataliz.gpsmock.R
-import com.dataliz.gpsmock.utils.TAG
 import com.dataliz.gpsmock.utils.openDeveloperOptions
-import com.dataliz.gpsmock.utils.showDialogForEnablingMockLocations
+import com.dataliz.gpsmock.utils.showDialogForSettingAppAsMockLocations
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 
@@ -42,22 +33,21 @@ class LocationMockHelper(private val context: Context) {
                 targetLocation
             )
         } catch (e : Exception){
-            try{
                 mockLocationForProviderMethod2(
                     provider,
                     locationManager,
                     targetLocation
                 )
-            } catch (e : Exception){
-                Log.d(TAG, "no way was possible in mocking location (although mocking fused location is in progress.")
-            }
+           // } catch (e : Exception){
+           //     Log.d(TAG, "no way was possible in mocking location (although mocking fused location is in progress.")
+
 
         }
 
     }
 
-    private fun mockLocationForProviderMethod1(
-        provider: String,
+    fun mockLocationForProviderMethod1(
+        provider: String = LocationManager.GPS_PROVIDER,
         locationManager: LocationManager,
         targetLocation: LatLng
     ) {
@@ -135,7 +125,7 @@ class LocationMockHelper(private val context: Context) {
         }
     }
 
-    private fun mockLocationForProviderMethod2(
+    fun mockLocationForProviderMethod2(
         provider: String,
         locationManager: LocationManager,
         targetLocation: LatLng
@@ -169,14 +159,14 @@ class LocationMockHelper(private val context: Context) {
                 // in developer options. You can show a message to the user.
                 Log.e("MapViewModel", "Error setting up mock location", e)
                 // Option 1: Show an in-app dialog explaining how to enable mock locations
-                showDialogForEnablingMockLocations(context)
+                showDialogForSettingAppAsMockLocations(context)
                 // Option 2: Open developer options directly
                 openDeveloperOptions(context)
                 return
             } catch (e: Exception) {
                 Log.e("MapViewModel", "Error setting up mock location", e)
                 // Option 1: Show an in-app dialog explaining how to enable mock locations
-                showDialogForEnablingMockLocations(context)
+                showDialogForSettingAppAsMockLocations(context)
                 // Option 2: Open developer options directly
                 openDeveloperOptions(context)
             }
@@ -217,14 +207,14 @@ class LocationMockHelper(private val context: Context) {
                 // in developer options. You can show a message to the user.
                 Log.e("MapViewModel", "Error setting up mock location", e)
                 // Option 1: Show an in-app dialog explaining how to enable mock locations
-                showDialogForEnablingMockLocations(context)
+                showDialogForSettingAppAsMockLocations(context)
                 // Option 2: Open developer options directly
                 openDeveloperOptions(context)
                 return
             } catch (e: Exception) {
                 Log.e("MapViewModel", "Error setting up mock location", e)
                 // Option 1: Show an in-app dialog explaining how to enable mock locations
-                showDialogForEnablingMockLocations(context)
+                showDialogForSettingAppAsMockLocations(context)
                 // Option 2: Open developer options directly
                 openDeveloperOptions(context)
             }
@@ -262,7 +252,7 @@ class LocationMockHelper(private val context: Context) {
             // in developer options. You can show a message to the user.
             Log.e("MapViewModel", "Error setting up mock location", e)
             // Option 1: Show an in-app dialog explaining how to enable mock locations
-            showDialogForEnablingMockLocations(context)
+            showDialogForSettingAppAsMockLocations(context)
             // Option 2: Open developer options directly
             openDeveloperOptions(context)
             return

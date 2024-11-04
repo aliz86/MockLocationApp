@@ -12,12 +12,15 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import com.dataliz.gpsmock.R
 import com.dataliz.gpsmock.domain.helpers.LocationMockHelper
 import com.dataliz.gpsmock.presentation.ui.MainActivity
 import com.dataliz.gpsmock.utils.STOP_MOCKING
 import com.dataliz.gpsmock.utils.STOP_SERVICE
 import com.dataliz.gpsmock.utils.TAG
+import com.dataliz.gpsmock.utils.hasAllMockLocationPermissions
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,10 +72,12 @@ class MockLocService : Service() {
 
         Log.d(TAG, "onStartCommand, startId = $startId")
         if (intent?.action == STOP_SERVICE) {
+            Log.d(TAG, "intent?.action = STOP_SERVICE")
             stopSelf() // Stop the service
             serviceScope.cancel()
             return START_NOT_STICKY
         } else if (intent?.action == STOP_MOCKING) {
+            Log.d(TAG, "intent?.action = STOP_MOCKING")
             stopLocationMocking(getSystemService(Context.LOCATION_SERVICE) as LocationManager)
             onMockModeChanged?.modeChanged(false)
             stopForeground(STOP_FOREGROUND_REMOVE)
@@ -93,6 +98,7 @@ class MockLocService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.d(TAG, "onDestroy")
         // Stop any coroutines or ongoing tasks when the service is destroyed
         serviceScope.cancel()
     }
@@ -101,14 +107,26 @@ class MockLocService : Service() {
         serviceScope.launch {
             //loop
             while (isActive) {
-                locationMockHelper.startLocationMocking(locationManager, targetLocation)
-                stopLocationMocking(locationManager)
-                delay(600)
+                try {
+                    locationMockHelper.startLocationMocking(locationManager, targetLocation)
+                    //stopLocationMocking(locationManager)
+                    delay(600)
+                } catch (e : Exception){
+                    e.printStackTrace()
+                    if(!hasAllMockLocationPermissions(applicationContext)){
+                        Toast.makeText(
+                            applicationContext,
+                            applicationContext.getString(R.string.check_permissions_again),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
             }
         }
     }
 
     fun stopLocationMocking(locationManager: LocationManager) {
+        Log.d(TAG, "fun stopLocationMocking")
         serviceScope.cancel()
         locationMockHelper.stopLocationMocking(locationManager)
     }

@@ -1,7 +1,9 @@
 <resources>
     <string name="app_name">GPS Mock</string>
     <string name="enable_mock_locations">"Enable Mock Locations"</string>
+    <string name="enable_developer_options">"Enable Developer Options"</string>
     <string name="to_use_this_feature_developer">"To use this feature, you need to enable mock locations in Developer options."</string>
+    <string name="to_use_this_feature_enable_developer">"To use this feature, you need to enable Developer options on your device. It usually is enabled by Going to Device Settings -> Tap on "About Phone" (The last option) -> Tap on Software information -> 5 taps on "Build Number""</string>
     <string name="open_settings">"Open Settings"</string>
     <string name="cancel">"Cancel"</string>
     <string name="check_permissions_again">"Check permissions again!\nerror: "</string>
