@@ -40,15 +40,6 @@ class MockLocService : Service() {
         LocationMockHelper(applicationContext)
     }
 
-    private val stopServiceIntent by lazy {
-        PendingIntent.getService(
-            this,
-            0,
-            Intent(this, MockLocService::class.java).setAction(STOP_SERVICE),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-    }
-
     private val stopMockingIntent by lazy {
         PendingIntent.getService(
             this,
@@ -128,7 +119,10 @@ class MockLocService : Service() {
     fun stopLocationMocking(locationManager: LocationManager) {
         Log.d(TAG, "fun stopLocationMocking")
         serviceScope.cancel()
+
         locationMockHelper.stopLocationMocking(locationManager)
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf() // Stop the service
     }
 
     // Create and show the notification for the foreground service
